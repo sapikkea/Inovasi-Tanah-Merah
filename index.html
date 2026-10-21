@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DentalFact! - Uji Pengetahuan Gigi Anda</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti untuk efek kemenangan -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    @keyframes pop {
+      0% { transform: scale(0.95); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .pop-card {
+      animation: pop 0.25s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+  <main class="w-full max-w-md bg-slate-800 border border-slate-700 rounded-3xl shadow-2xl p-6 relative overflow-hidden">
+    
+    <!-- Header / Branding -->
+    <header class="flex items-center justify-between border-b border-slate-700/60 pb-3 mb-5">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🦷</span>
+        <h1 class="text-lg font-bold tracking-tight text-teal-400">DentalFact!</h1>
+      </div>
+      <span class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-medium">Inovasi Ruang Menunggu</span>
+    </header>
+
+    <!-- SCREEN 1: MULA -->
+    <section id="screen-start" class="text-center py-6">
+      <div class="w-20 h-20 bg-teal-500/20 text-teal-300 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-inner">
+        ✨
+      </div>
+      <h2 class="text-2xl font-extrabold text-white mb-2">Mitos atau Fakta?</h2>
+      <p class="text-slate-300 text-sm mb-6 leading-relaxed">
+        Berapa banyak rahsia penjagaan gigi dewasa yang anda betul-betul tahu? Uji diri anda dalam masa 1 minit sementara menunggu nama dipanggil!
+      </p>
+      
+      <div class="bg-slate-700/50 rounded-2xl p-3.5 mb-6 text-left text-xs text-slate-300 space-y-1.5 border border-slate-600/40">
+        <p class="flex items-center gap-2"><span class="text-teal-400 font-bold">✔</span> 5 Soalan Pantas</p>
+        <p class="flex items-center gap-2"><span class="text-teal-400 font-bold">✔</span> Penerangan ringkas oleh doktor gigi</p>
+        <p class="flex items-center gap-2"><span class="text-teal-400 font-bold">✔</span> Ketahui tahap "Dental IQ" anda</p>
+      </div>
+
+      <button id="btn-start" class="w-full py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 font-bold text-white rounded-2xl shadow-lg shadow-teal-500/20 active:scale-95 transition">
+        Mula Cabaran Sekarang 🚀
+      </button>
+    </section>
+
+    <!-- SCREEN 2: GAMEPLAY -->
+    <section id="screen-quiz" class="hidden">
+      <!-- Progress Bar -->
+      <div class="flex justify-between items-center text-xs font-semibold text-slate-400 mb-2">
+        <span id="question-tracker">Soalan 1 / 5</span>
+        <span id="score-tracker" class="text-teal-400">Skor: 0</span>
+      </div>
+      <div class="w-full bg-slate-700 h-2 rounded-full mb-6 overflow-hidden">
+        <div id="progress-bar" class="bg-teal-400 h-2 w-1/5 transition-all duration-300"></div>
+      </div>
+
+      <!-- Kad Soalan -->
+      <div class="bg-slate-700/60 border border-slate-600/60 rounded-2xl p-6 min-h-[160px] flex items-center justify-center text-center mb-6 pop-card">
+        <p id="question-text" class="text-lg font-semibold text-white leading-snug">
+          <!-- Text soalan dimasukkan oleh JS -->
+        </p>
+      </div>
+
+      <!-- Butang Pilihan -->
+      <div id="action-buttons" class="grid grid-cols-2 gap-3 mb-4">
+        <button onclick="handleAnswer(false)" class="py-3.5 bg-rose-500/20 border border-rose-500/40 hover:bg-rose-500/30 text-rose-300 font-bold rounded-2xl active:scale-95 transition flex items-center justify-center gap-1.5">
+          <span>❌</span> MITOS
+        </button>
+        <button onclick="handleAnswer(true)" class="py-3.5 bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/30 text-emerald-300 font-bold rounded-2xl active:scale-95 transition flex items-center justify-center gap-1.5">
+          <span>✅</span> FAKTA
+        </button>
+      </div>
+
+      <!-- Kad Penjelasan (Pop-up/Slide down lepas jawab) -->
+      <div id="explanation-box" class="hidden rounded-2xl p-4 mb-4 border transition">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span id="explanation-icon" class="text-xl"></span>
+          <span id="explanation-title" class="font-bold text-sm"></span>
+        </div>
+        <p id="explanation-text" class="text-xs text-slate-200 leading-relaxed mb-3"></p>
+        <button id="btn-next" class="w-full py-2.5 bg-slate-900/80 hover:bg-black font-semibold text-xs text-white rounded-xl active:scale-95 transition">
+          Seterusnya ➔
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 3: KEPUTUSAN -->
+    <section id="screen-result" class="hidden text-center py-6">
+      <div id="result-badge" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg"></div>
+      <h2 id="result-title" class="text-2xl font-extrabold text-white mb-1"></h2>
+      <p id="result-score" class="text-teal-400 font-bold text-lg mb-3"></p>
+      <p id="result-desc" class="text-slate-300 text-xs mb-6 px-4 leading-relaxed"></p>
+
+      <div class="bg-teal-950/40 border border-teal-500/30 rounded-2xl p-4 mb-6 text-left">
+        <h4 class="text-teal-300 font-bold text-xs uppercase tracking-wide mb-1 flex items-center gap-1">
+          <span>💡</span> Tips Sebelum Dipanggil:
+        </h4>
+        <p class="text-slate-300 text-xs leading-relaxed">
+          Jangan ragu untuk berkongsi masalah seperti gigi ngilu atau gusi berdarah semasa pemeriksaan tadi. Doktor sedia membantu!
+        </p>
+      </div>
+
+      <button id="btn-restart" class="w-full py-3 bg-slate-700 hover:bg-slate-600 font-bold text-white rounded-2xl active:scale-95 transition text-sm">
+        🔄 Main Sekali Lagi
+      </button>
+    </section>
+
+  </main>
+
+  <script>
+    // Bank Soalan berasaskan bukti klinikal yang relevan untuk umur 16+
+    const questions = [
+      {
+        question: "Selepas memberus gigi, kita wajib berkumur dengan air paip sebersih-bersihnya.",
+        isFact: false,
+        explanation: "MITOS: Cukup sekadar meludah keluar buih ubat gigi ('Spit, don't rinse'). Berkumur dengan air akan menghakis lapisan fluorida yang sepatutnya melindungi gigi anda!"
+      },
+      {
+        question: "Gusi yang berdarah semasa memberus gigi adalah tanda anda perlu berhenti memberus kawasan tersebut.",
+        isFact: false,
+        explanation: "MITOS: Gusi berdarah sering kali tanda radang (gingivitis) akibat plak. Anda patut teruskan memberus dengan lembut dan kerapkan flos gigi."
+      },
+      {
+        question: "Penggunaan flos gigi sama pentingnya dengan memberus gigi setiap hari.",
+        isFact: true,
+        explanation: "FAKTA: Berus gigi hanya membersihkan kira-kira 60% permukaan gigi. Baki 40% di celah-celah gigi hanya boleh dicapai dengan flos."
+      },
+      {
+        question: "Menggosok gigi dengan kuat menggunakan berus gigi 'Hard' adalah cara terbaik untuk memutihkan gigi.",
+        isFact: false,
+        explanation: "MITOS: Menggosok terlalu kuat merosakkan enamel (lapisan luar) dan menyebabkan gusi surut serta gigi menjadi sangat sensitif/ngilu."
+      },
+      {
+        question: "Pemeriksaan dan penskaleran (scaling) karang gigi digalakkan sekurang-kurangnya 6 bulan sekali.",
+        isFact: true,
+        explanation: "FAKTA: Karang gigi yang mengeras tidak boleh ditanggalkan dengan berus gigi biasa dan memerlukan rawatan penskaleran profesional."
+      }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+
+    const screenStart = document.getElementById('screen-start');
+    const screenQuiz = document.getElementById('screen-quiz');
+    const screenResult = document.getElementById('screen-result');
+
+    const questionTracker = document.getElementById('question-tracker');
+    const scoreTracker = document.getElementById('score-tracker');
+    const progressBar = document.getElementById('progress-bar');
+    const questionText = document.getElementById('question-text');
+    const actionButtons = document.getElementById('action-buttons');
+
+    const explanationBox = document.getElementById('explanation-box');
+    const explanationIcon = document.getElementById('explanation-icon');
+    const explanationTitle = document.getElementById('explanation-title');
+    const explanationText = document.getElementById('explanation-text');
+    const btnNext = document.getElementById('btn-next');
+
+    document.getElementById('btn-start').addEventListener('click', startGame);
+    document.getElementById('btn-restart').addEventListener('click', startGame);
+    btnNext.addEventListener('click', nextQuestion);
+
+    function startGame() {
+      currentIndex = 0;
+      score = 0;
+      screenStart.classList.add('hidden');
+      screenResult.classList.add('hidden');
+      screenQuiz.classList.remove('hidden');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const q = questions[currentIndex];
+      questionTracker.textContent = `Soalan ${currentIndex + 1} / ${questions.length}`;
+      scoreTracker.textContent = `Skor: ${score}`;
+      progressBar.style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
+      
+      questionText.textContent = q.question;
+      explanationBox.classList.add('hidden');
+      actionButtons.classList.remove('hidden');
+    }
+
+    function handleAnswer(userAnswer) {
+      const q = questions[currentIndex];
+      const isCorrect = userAnswer === q.isFact;
+
+      if (isCorrect) {
+        score++;
+        explanationBox.className = "rounded-2xl p-4 mb-4 border bg-emerald-950/40 border-emerald-500/50 text-emerald-200 block";
+        explanationIcon.textContent = "🎉";
+        explanationTitle.textContent = "Tepat Sekali!";
+      } else {
+        explanationBox.className = "rounded-2xl p-4 mb-4 border bg-rose-950/40 border-rose-500/50 text-rose-200 block";
+        explanationIcon.textContent = "💡";
+        explanationTitle.textContent = "Kurang Tepat!";
+      }
+
+      explanationText.textContent = q.explanation;
+      actionButtons.classList.add('hidden');
+      scoreTracker.textContent = `Skor: ${score}`;
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      screenQuiz.classList.add('hidden');
+      screenResult.classList.remove('hidden');
+
+      const resultBadge = document.getElementById('result-badge');
+      const resultTitle = document.getElementById('result-title');
+      const resultScore = document.getElementById('result-score');
+      const resultDesc = document.getElementById('result-desc');
+
+      resultScore.textContent = `Skor Akhir: ${score} / ${questions.length}`;
+
+      if (score === 5) {
+        confetti({ particleCount: 90, spread: 60 });
+        resultBadge.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg bg-emerald-500/20 text-emerald-300";
+        resultBadge.textContent = "👑";
+        resultTitle.textContent = "Pakar Kesihatan Gigi!";
+        resultDesc.textContent = "Hebat! Anda sangat berpengetahuan tentang tabiat pergigian yang betul. Doktor pasti bangga hari ini!";
+      } else if (score >= 3) {
+        resultBadge.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg bg-teal-500/20 text-teal-300";
+        resultBadge.textContent = "🌟";
+        resultTitle.textContent = "Bagus & Berpengetahuan!";
+        resultDesc.textContent = "Anda tahu asas yang kukuh, cuma ada sedikit mitos yang perlu diperbetulkan. Teruskan amalan baik!";
+      } else {
+        resultBadge.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg bg-amber-500/20 text-amber-300";
+        resultBadge.textContent = "📖";
+        resultTitle.textContent = "Perlu Tingkatkan Penjagaan!";
+        resultDesc.textContent = "Banyak amalan lama yang kita sangka betul rupanya mitos semata-mata. Hari ini waktu terbaik untuk belajar daripada doktor anda!";
+      }
+    }
+  </script>
+</body>
+</html>
