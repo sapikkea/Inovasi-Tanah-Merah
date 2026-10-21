@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dino Gigi Sihat - Dentist Mini Game</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-3deg); }
+      50% { transform: rotate(3deg); }
+    }
+    .wiggle {
+      animation: wiggle 0.5s ease-in-out infinite;
+    }
+    .sparkle {
+      animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    /* Elak teks kena highlight masa budak tap laju-laju */
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+  </style>
+</head>
+<body class="bg-amber-100 text-slate-800 min-h-screen flex items-center justify-center p-3 font-sans select-none">
+
+  <!-- Container Utama -->
+  <main class="w-full max-w-sm bg-white border-4 border-amber-300 rounded-[35px] shadow-2xl p-5 relative overflow-hidden flex flex-col items-center">
+    
+    <!-- Top Header -->
+    <div class="w-full flex items-center justify-between pb-2 mb-2 border-b-2 border-dashed border-amber-200">
+      <div class="flex items-center gap-1.5">
+        <span class="text-3xl">🦖</span>
+        <span class="text-base font-black text-emerald-600 tracking-wide">DinoGigi!</span>
+      </div>
+      <span id="level-badge" class="bg-emerald-100 text-emerald-700 text-xs px-3 py-1 rounded-full font-bold">Klinik Cilik</span>
+    </div>
+
+    <!-- ================= SCREEN 1: MULA ================= -->
+    <section id="screen-start" class="text-center py-4 w-full">
+      <div class="relative w-36 h-36 mx-auto mb-3 bg-emerald-100 rounded-full flex items-center justify-center text-7xl shadow-inner border-4 border-emerald-300">
+        🦖
+        <span class="absolute -top-1 -right-1 text-3xl">😢</span>
+        <span class="absolute bottom-1 right-2 text-2xl">🦷</span>
+      </div>
+      <h1 class="text-2xl font-black text-slate-800 mb-1">Bantu Dino Sakit Gigi!</h1>
+      <p class="text-xs text-slate-500 mb-5 px-3">
+        Dino suka makan tapi terlupa gosok gigi! Jom jadi Doktor Gigi cilik dan rawat gigi Dino sampai senyum berseri! ✨
+      </p>
+
+      <div class="bg-amber-50 rounded-2xl p-3 mb-5 border-2 border-amber-200 text-left text-xs font-semibold text-amber-800 space-y-1.5">
+        <p>1️⃣ Cuci karang gigi kuning 🚿</p>
+        <p>2️⃣ Cabut gigi goyang rosak 🦷</p>
+        <p>3️⃣ Tampal gigi berlubang 🔦</p>
+      </div>
+
+      <button id="btn-start" onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 font-black text-white text-lg rounded-2xl shadow-lg shadow-emerald-500/30 active:scale-95 transition">
+        JOM RAWAT DINO! 🚀
+      </button>
+    </section>
+
+    <!-- ================= SCREEN 2: GAMEPLAY ================= -->
+    <section id="screen-game" class="hidden w-full flex flex-col items-center">
+      
+      <!-- Instruction Banner -->
+      <div class="w-full bg-amber-100 border-2 border-amber-300 rounded-2xl p-2.5 mb-3 text-center">
+        <span id="task-step" class="text-[10px] font-black uppercase tracking-wider text-amber-700 block">RAWATAN 1 / 3</span>
+        <h2 id="task-desc" class="text-xs font-black text-slate-800">Tekan plak kuning untuk cuci!</h2>
+      </div>
+
+      <!-- Mulut Dino Display -->
+      <div class="relative w-full h-64 bg-rose-400 rounded-[30px] border-4 border-rose-500 shadow-inner flex flex-col justify-between items-center p-3 overflow-hidden">
+        
+        <!-- Lidah & Kerongkong Kartun -->
+        <div class="absolute w-24 h-24 bg-rose-600 rounded-full top-20 opacity-40"></div>
+        <div class="absolute w-32 h-16 bg-rose-300 rounded-full bottom-3"></div>
+
+        <!-- Barisan Gigi Atas -->
+        <div class="flex justify-center gap-2 z-10">
+          <div class="w-10 h-10 bg-white rounded-b-2xl border-2 border-slate-200 shadow flex items-center justify-center text-sm font-bold text-slate-300">🦷</div>
+          <div class="w-12 h-12 bg-white rounded-b-2xl border-2 border-slate-200 shadow flex items-center justify-center text-base font-bold text-slate-300">🦷</div>
+          <div class="w-10 h-10 bg-white rounded-b-2xl border-2 border-slate-200 shadow flex items-center justify-center text-sm font-bold text-slate-300">🦷</div>
+        </div>
+
+        <!-- Kawasan Gigi Rawatan (Tengah Bawah) -->
+        <div id="treatment-zone" class="z-20 my-auto flex items-center justify-center relative w-full">
+          <!-- Kandungan dinamik disuntik melalui JS -->
+        </div>
+
+        <!-- Barisan Gigi Bawah Sisi -->
+        <div class="flex justify-center gap-3 z-10">
+          <div class="w-10 h-9 bg-white rounded-t-2xl border-2 border-slate-200 shadow"></div>
+          <div class="w-14 h-10 bg-white rounded-t-2xl border-2 border-slate-200 shadow"></div>
+          <div class="w-10 h-9 bg-white rounded-t-2xl border-2 border-slate-200 shadow"></div>
+        </div>
+
+      </div>
+
+      <!-- Action / Hint Text Bawah -->
+      <p id="action-hint" class="text-[11px] text-slate-400 mt-3 font-semibold text-center h-4">
+        Gunakan jari anda untuk merawat gigi Dino
+      </p>
+    </section>
+
+    <!-- ================= SCREEN 3: MENANG ================= -->
+    <section id="screen-win" class="hidden text-center py-4 w-full">
+      <div class="relative w-32 h-32 mx-auto mb-3 bg-amber-100 rounded-full flex items-center justify-center text-7xl shadow-inner border-4 border-amber-300">
+        🦖
+        <span class="absolute top-0 right-0 text-3xl">✨</span>
+        <span class="absolute bottom-0 left-0 text-3xl">😁</span>
+      </div>
+
+      <h2 class="text-2xl font-black text-emerald-600 mb-1">Tahniah Doktor Cilik!</h2>
+      <p class="text-xs text-slate-600 mb-4 px-2 leading-relaxed">
+        Gigi Dino dah putih bersih, tak sakit lagi dan Dino dah senyum gembira! Awak doktor yang sangat hebat! 🌟
+      </p>
+
+      <div class="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-3 mb-5 text-left text-xs text-emerald-900">
+        <p class="font-bold flex items-center gap-1.5 mb-1">
+          <span>🍓</span> Jangan Lupa Pesan Doktor:
+        </p>
+        <p class="text-[11px] text-emerald-700">
+          Gosok gigi 2 kali sehari, kurangkan gula-gula manis dan jumpa doktor gigi tanpa rasa takut!
+        </p>
+      </div>
+
+      <button onclick="startGame()" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 font-extrabold text-white rounded-2xl active:scale-95 transition text-sm shadow-md">
+        🔄 Rawat Dino Sekali Lagi
+      </button>
+    </section>
+
+  </main>
+
+  <script>
+    /* Audio Effects menggunakan Web Audio API (Tanpa perlukan file mp3 luaran) */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'clean') {
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      } else if (type === 'pop') {
+        osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+      } else if (type === 'win') {
+        const notes = [523, 659, 783, 1046];
+        notes.forEach((freq, i) => {
+          const noteOsc = audioCtx.createOscillator();
+          const noteGain = audioCtx.createGain();
+          noteOsc.connect(noteGain);
+          noteGain.connect(audioCtx.destination);
+          noteOsc.frequency.setValueAtTime(freq, audioCtx.currentTime + (i * 0.12));
+          noteGain.gain.setValueAtTime(0.2, audioCtx.currentTime + (i * 0.12));
+          noteGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (i * 0.12) + 0.2);
+          noteOsc.start(audioCtx.currentTime + (i * 0.12));
+          noteOsc.stop(audioCtx.currentTime + (i * 0.12) + 0.2);
+        });
+      }
+    }
+
+    /* Game State */
+    let currentStage = 1;
+    let subStep = 0;
+
+    const screenStart = document.getElementById('screen-start');
+    const screenGame = document.getElementById('screen-game');
+    const screenWin = document.getElementById('screen-win');
+    const treatmentZone = document.getElementById('treatment-zone');
+    const taskStep = document.getElementById('task-step');
+    const taskDesc = document.getElementById('task-desc');
+    const actionHint = document.getElementById('action-hint');
+
+    function startGame() {
+      currentStage = 1;
+      subStep = 0;
+      screenStart.classList.add('hidden');
+      screenWin.classList.add('hidden');
+      screenGame.classList.remove('hidden');
+      loadStage();
+    }
+
+    function loadStage() {
+      treatmentZone.innerHTML = '';
+
+      if (currentStage === 1) {
+        // ========== RAWATAN 1: SCALING / CUCI KARANG ==========
+        taskStep.textContent = "RAWATAN 1 / 3: CUCI KARANG GIGI 🚿";
+        taskDesc.textContent = "Tekan semua plak kuman kuning sampai bersih!";
+        actionHint.textContent = "Ketik/Sentuh kotoran kuning untuk mengikisnya!";
+        
+        let plaqueCount = 4;
+        treatmentZone.innerHTML = `
+          <div class="relative w-28 h-32 bg-white rounded-2xl border-4 border-slate-300 shadow-xl flex items-center justify-center">
+            <span class="text-4xl">🦷</span>
+            <!-- Plak Kuning & Kuman -->
+            <div id="p1" onclick="cleanPlaque('p1')" class="absolute top-2 left-2 bg-amber-400 border border-amber-600 rounded-full px-2 py-0.5 text-[10px] font-black text-amber-900 cursor-pointer shadow">🦠 Karang</div>
+            <div id="p2" onclick="cleanPlaque('p2')" class="absolute bottom-3 left-3 bg-amber-400 border border-amber-600 rounded-full px-2 py-0.5 text-[10px] font-black text-amber-900 cursor-pointer shadow">🦠 Kuman</div>
+            <div id="p3" onclick="cleanPlaque('p3')" class="absolute top-4 right-2 bg-amber-400 border border-amber-600 rounded-full px-2 py-0.5 text-[10px] font-black text-amber-900 cursor-pointer shadow">🦠 Plak</div>
+            <div id="p4" onclick="cleanPlaque('p4')" class="absolute bottom-4 right-3 bg-amber-400 border border-amber-600 rounded-full px-2 py-0.5 text-[10px] font-black text-amber-900 cursor-pointer shadow">🦠 Karang</div>
+          </div>
+        `;
+
+        window.cleanPlaque = function(id) {
+          const el = document.getElementById(id);
+          if (el) {
+            playBeep('clean');
+            el.remove();
+            plaqueCount--;
+            if (plaqueCount === 0) {
+              advanceStage();
+            }
+          }
+        };
+
+      } else if (currentStage === 2) {
+        // ========== RAWATAN 2: CABUT GIGI SUSU ROSAK ==========
+        taskStep.textContent = "RAWATAN 2 / 3: CABUT GIGI GOYANG 🦷";
+        taskDesc.textContent = "Gigi ini hitam & sakit! Cabut perlahan-lahan.";
+        actionHint.textContent = "Langkah 1: Sapu ubat kebas strawberi dulu 🍓";
+        subStep = 1;
+
+        treatmentZone.innerHTML = `
+          <div class="flex flex-col items-center">
+            <div id="bad-tooth" class="w-24 h-28 bg-slate-400 rounded-2xl border-4 border-slate-600 shadow-xl flex flex-col items-center justify-center relative wiggle">
+              <span class="text-3xl">🪱</span>
+              <span class="text-[10px] font-bold text-slate-800 bg-white/70 px-1 rounded mt-1">Sakit!</span>
+            </div>
+            
+            <div class="mt-4 flex gap-2">
+              <button id="btn-numb" onclick="applyNumb()" class="bg-rose-500 hover:bg-rose-600 text-white font-black text-xs px-3 py-2 rounded-xl shadow active:scale-95">
+                🍓 Sapu Ubat Kebas
+              </button>
+              <button id="btn-pull" onclick="pullTooth()" disabled class="bg-slate-300 text-slate-500 font-black text-xs px-3 py-2 rounded-xl shadow cursor-not-allowed">
+                🔧 Cabut Gigi
+              </button>
+            </div>
+          </div>
+        `;
+
+        window.applyNumb = function() {
+          playBeep('clean');
+          const btnNumb = document.getElementById('btn-numb');
+          const btnPull = document.getElementById('btn-pull');
+          const tooth = document.getElementById('bad-tooth');
+
+          btnNumb.disabled = true;
+          btnNumb.className = "bg-slate-300 text-slate-500 font-black text-xs px-3 py-2 rounded-xl shadow cursor-not-allowed";
+          btnNumb.textContent = "✔ Dah Kebas";
+
+          btnPull.disabled = false;
+          btnPull.className = "bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs px-3 py-2 rounded-xl shadow active:scale-95";
+          
+          tooth.classList.remove('wiggle');
+          actionHint.textContent = "Sekarang Dino tak rasa sakit! Tekan 'Cabut Gigi' 🔧";
+        };
+
+        window.pullTooth = function() {
+          playBeep('pop');
+          const tooth = document.getElementById('bad-tooth');
+          tooth.innerHTML = '<span class="text-4xl">✨</span><span class="text-[11px] font-black text-emerald-800">Selesai!</span>';
+          tooth.className = "w-24 h-28 bg-emerald-200 rounded-2xl border-4 border-emerald-400 shadow-xl flex flex-col items-center justify-center";
+          
+          setTimeout(() => {
+            advanceStage();
+          }, 700);
+        };
+
+      } else if (currentStage === 3) {
+        // ========== RAWATAN 3: TAMPAL GIGI BERLUBANG ==========
+        taskStep.textContent = "RAWATAN 3 / 3: TAMPAL GIGI BERLUBANG 🔦";
+        taskDesc.textContent = "Ada lubang hitam! Isi simen dan sinarkan lampu UV.";
+        actionHint.textContent = "Langkah 1: Tekan 'Isi Simen' ke dalam lubang 🍦";
+
+        treatmentZone.innerHTML = `
+          <div class="flex flex-col items-center">
+            <div id="cavity-tooth" class="relative w-28 h-32 bg-white rounded-2xl border-4 border-slate-300 shadow-xl flex items-center justify-center">
+              <span class="text-4xl opacity-30">🦷</span>
+              <!-- Lubang Cavity -->
+              <div id="cavity-hole" class="absolute w-12 h-12 bg-slate-900 rounded-full border-2 border-slate-700 flex items-center justify-center">
+                <span id="cavity-content" class="text-xs">👾</span>
+              </div>
+            </div>
+
+            <div class="mt-4 flex gap-2">
+              <button id="btn-fill" onclick="fillCavity()" class="bg-amber-500 hover:bg-amber-600 text-white font-black text-xs px-3 py-2 rounded-xl shadow active:scale-95">
+                🍦 1. Isi Simen
+              </button>
+              <button id="btn-cure" onclick="cureCavity()" disabled class="bg-slate-300 text-slate-500 font-black text-xs px-3 py-2 rounded-xl shadow cursor-not-allowed">
+                🔦 2. Lampu UV
+              </button>
+            </div>
+          </div>
+        `;
+
+        window.fillCavity = function() {
+          playBeep('clean');
+          const cavityHole = document.getElementById('cavity-hole');
+          const cavityContent = document.getElementById('cavity-content');
+          const btnFill = document.getElementById('btn-fill');
+          const btnCure = document.getElementById('btn-cure');
+
+          cavityHole.className = "absolute w-12 h-12 bg-sky-200 rounded-full border-2 border-sky-400 flex items-center justify-center";
+          cavityContent.textContent = "💧";
+
+          btnFill.disabled = true;
+          btnFill.className = "bg-slate-300 text-slate-500 font-black text-xs px-3 py-2 rounded-xl shadow cursor-not-allowed";
+
+          btnCure.disabled = false;
+          btnCure.className = "bg-indigo-500 hover:bg-indigo-600 text-white font-black text-xs px-3 py-2 rounded-xl shadow active:scale-95";
+
+          actionHint.textContent = "Langkah 2: Tekan 'Lampu UV' untuk keraskan simen! ⚡";
+        };
+
+        window.cureCavity = function() {
+          playBeep('clean');
+          const cavityHole = document.getElementById('cavity-hole');
+          const tooth = document.getElementById('cavity-tooth');
+          
+          cavityHole.className = "absolute w-12 h-12 bg-white rounded-full border-2 border-emerald-300 flex items-center justify-center shadow-inner";
+          cavityHole.innerHTML = '<span class="text-emerald-500 font-bold">✨</span>';
+          tooth.classList.add('border-emerald-400');
+
+          setTimeout(() => {
+            showWinScreen();
+          }, 800);
+        };
+      }
+    }
+
+    function advanceStage() {
+      currentStage++;
+      if (currentStage <= 3) {
+        loadStage();
+      } else {
+        showWinScreen();
+      }
+    }
+
+    function showWinScreen() {
+      playBeep('win');
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+      screenGame.classList.add('hidden');
+      screenWin.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
