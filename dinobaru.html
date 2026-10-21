@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dino Dentist Adventure!</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none; /* Wajib untuk drag lancar di phone */
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulsing {
+      animation: pulse-ring 1.5s ease-in-out infinite;
+    }
+    .vibrate {
+      animation: shake 0.1s linear infinite;
+    }
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      20% { transform: translate(-2px, -1px) rotate(-1deg); }
+      40% { transform: translate(-1px, 2px) rotate(1deg); }
+      60% { transform: translate(2px, 1px) rotate(0deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      100% { transform: translate(1px, 1px) rotate(0deg); }
+    }
+  </style>
+</head>
+<body class="bg-amber-100 text-slate-800 min-h-screen flex items-center justify-center p-2 font-sans select-none overflow-hidden">
+
+  <!-- Mobile Screen Frame -->
+  <main class="w-full max-w-sm bg-sky-200 border-4 border-sky-400 rounded-[35px] shadow-2xl p-4 flex flex-col items-center relative overflow-hidden h-[95vh] max-h-[680px]">
+    
+    <!-- Top Header -->
+    <header class="w-full flex items-center justify-between pb-2 border-b-2 border-sky-300">
+      <div class="flex items-center gap-1.5">
+        <span class="text-3xl">🦖</span>
+        <span class="text-lg font-black text-sky-800">DinoDentist!</span>
+      </div>
+      <span id="level-badge" class="bg-amber-300 text-amber-900 text-xs px-3 py-1 rounded-full font-black shadow-sm">
+        Level 1/3
+      </span>
+    </header>
+
+    <!-- ================= SCREEN 1: START ================= -->
+    <section id="screen-start" class="w-full flex flex-col items-center justify-around h-full py-4 text-center">
+      <div class="w-36 h-36 bg-emerald-300 border-4 border-white rounded-full flex items-center justify-center text-7xl shadow-lg relative pulsing">
+        🦖
+        <span class="absolute -bottom-1 -right-1 text-3xl">🤕</span>
+      </div>
+
+      <div>
+        <h1 class="text-2xl font-black text-slate-800 mb-1">Klinik Gigi Dino!</h1>
+        <p class="text-xs text-slate-600 px-4">
+          Dino menangis sebab sakit gigi! Pegang alatan doktor dan rawat sendiri mulut Dino sampai bersih!
+        </p>
+      </div>
+
+      <button onclick="startGame()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black text-lg rounded-2xl shadow-lg transition">
+        BUKA MULUT DINO! 🦷
+      </button>
+    </section>
+
+    <!-- ================= SCREEN 2: GAMEPLAY INTERAKTIF ================= -->
+    <section id="screen-game" class="hidden w-full flex flex-col items-center justify-between h-full py-2">
+      
+      <!-- Banner Arahan -->
+      <div class="w-full bg-white/80 border-2 border-sky-300 rounded-2xl py-2 px-3 text-center shadow-sm">
+        <h3 id="instruction-title" class="text-xs font-black text-sky-900 uppercase">Tahap 1: Cuci Karang Gigi</h3>
+        <p id="instruction-sub" class="text-[11px] font-bold text-slate-600">Seret muncung air 🚿 ke atas kerak kuning!</p>
+      </div>
+
+      <!-- KAWASAN MULUT DINO (CANVAS & ELEMEN INTERAKTIF) -->
+      <div id="mouth-zone" class="relative w-full h-[290px] bg-rose-400 rounded-[35px] border-4 border-rose-600 shadow-inner flex flex-col items-center justify-between p-3 overflow-hidden">
+        
+        <!-- Mata Dino kat atas mulut (Mata berkelip/reaksi) -->
+        <div class="absolute -top-1 flex gap-12 z-0">
+          <div id="eye-left" class="w-6 h-6 bg-white rounded-full border-2 border-slate-700 flex items-center justify-center">
+            <div class="w-2.5 h-2.5 bg-black rounded-full"></div>
+          </div>
+          <div id="eye-right" class="w-6 h-6 bg-white rounded-full border-2 border-slate-700 flex items-center justify-center">
+            <div class="w-2.5 h-2.5 bg-black rounded-full"></div>
+          </div>
+        </div>
+
+        <!-- Gigi Atas -->
+        <div class="flex gap-2 z-10 mt-3">
+          <div class="w-10 h-10 bg-white rounded-b-2xl border-2 border-slate-200 shadow"></div>
+          <div class="w-12 h-12 bg-white rounded-b-2xl border-2 border-slate-200 shadow"></div>
+          <div class="w-10 h-10 bg-white rounded-b-2xl border-2 border-slate-200 shadow"></div>
+        </div>
+
+        <!-- Zon Tengah Interaktif (Gigi Rawatan) -->
+        <div id="stage-arena" class="relative w-full flex-1 flex items-center justify-center z-10">
+          <!-- Kandungan fasa disuntik oleh JavaScript -->
+        </div>
+
+        <!-- Gigi Bawah -->
+        <div class="flex gap-2 z-10">
+          <div class="w-10 h-9 bg-white rounded-t-2xl border-2 border-slate-200 shadow"></div>
+          <div class="w-12 h-10 bg-white rounded-t-2xl border-2 border-slate-200 shadow"></div>
+          <div class="w-10 h-9 bg-white rounded-t-2xl border-2 border-slate-200 shadow"></div>
+        </div>
+
+        <!-- Lapisan Kesan Air / Lampu UV -->
+        <div id="fx-layer" class="absolute inset-0 pointer-events-none z-30"></div>
+      </div>
+
+      <!-- MEJA ALATAN (DOCK TRAY BAWAH) -->
+      <div class="w-full bg-white/90 border-2 border-sky-300 rounded-3xl p-3 shadow-md flex items-center justify-center relative min-h-[90px]">
+        <div id="tray-tools" class="flex gap-4 items-center justify-center">
+          <!-- Alat fizikal dipaparkan di sini -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= SCREEN 3: TAHNIAH ================= -->
+    <section id="screen-win" class="hidden w-full flex flex-col items-center justify-around h-full py-4 text-center">
+      <div class="w-36 h-36 bg-amber-300 border-4 border-white rounded-full flex items-center justify-center text-8xl shadow-lg relative">
+        🦖
+        <span class="absolute top-0 right-0 text-3xl">✨</span>
+      </div>
+
+      <div>
+        <h2 class="text-2xl font-black text-emerald-600 mb-1">Dino Dah Sembuh! 🎉</h2>
+        <p class="text-xs text-slate-600 px-4">
+          Hebatnya awak! Semua kotoran dah hilang, gigi goyang dah cabut dan lubang dah siap ditampal!
+        </p>
+      </div>
+
+      <button onclick="startGame()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black text-base rounded-2xl shadow-lg transition">
+        MAIN LAGI SEKALI 🔄
+      </button>
+    </section>
+
+  </main>
+
+  <script>
+    // Audio Synthesizer Tanpa Fail Luaran
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function snd(type) {
+      if (ctx.state === 'suspended') ctx.resume();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      const now = ctx.currentTime;
+      if (type === 'spray') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800 + Math.random()*300, now);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } else if (type === 'drill') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1200 + Math.random()*200, now);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+        osc.start(now);
+        osc.stop(now + 0.06);
+      } else if (type === 'pop') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.25);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'sparkle') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(900, now);
+        osc.frequency.exponentialRampToValueAtTime(1500, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      }
+    }
+
+    let currentLevel = 1;
+    const screenStart = document.getElementById('screen-start');
+    const screenGame = document.getElementById('screen-game');
+    const screenWin = document.getElementById('screen-win');
+    const stageArena = document.getElementById('stage-arena');
+    const trayTools = document.getElementById('tray-tools');
+    const instructionTitle = document.getElementById('instruction-title');
+    const instructionSub = document.getElementById('instruction-sub');
+    const levelBadge = document.getElementById('level-badge');
+    const fxLayer = document.getElementById('fx-layer');
+
+    function startGame() {
+      currentLevel = 1;
+      screenStart.classList.add('hidden');
+      screenWin.classList.add('hidden');
+      screenGame.classList.remove('hidden');
+      loadLevel();
+    }
+
+    function loadLevel() {
+      stageArena.innerHTML = '';
+      trayTools.innerHTML = '';
+      fxLayer.innerHTML = '';
+      levelBadge.textContent = `Level ${currentLevel}/3`;
+
+      if (currentLevel === 1) {
+        setupLevel1();
+      } else if (currentLevel === 2) {
+        setupLevel2();
+      } else if (currentLevel === 3) {
+        setupLevel3();
+      }
+    }
+
+    /* ========================================================
+       LEVEL 1: CUCI KARANG GIGI (SCRUBBING WITH WATER SPRAY)
+       ======================================================== */
+    function setupLevel1() {
+      instructionTitle.textContent = "Rawatan 1: Sembur & Cuci Karang 🚿";
+      instructionSub.textContent = "Gosok muncung air atas semua plak kuning!";
+
+      // Gigi Tengah dengan Karang Kuning
+      stageArena.innerHTML = `
+        <div id="target-tooth" class="relative w-32 h-36 bg-white rounded-3xl border-4 border-slate-300 shadow-2xl flex items-center justify-center">
+          <div class="text-4xl opacity-20">🦷</div>
+          <!-- 3 Tompok Plak yang perlu digosok -->
+          <div id="dirt1" class="dirt absolute top-3 left-4 w-9 h-9 bg-amber-400 rounded-full border-2 border-amber-600 flex items-center justify-center text-xs font-black text-amber-950">🦠</div>
+          <div id="dirt2" class="dirt absolute bottom-4 right-4 w-10 h-10 bg-amber-500 rounded-full border-2 border-amber-700 flex items-center justify-center text-xs font-black text-amber-950">🦠</div>
+          <div id="dirt3" class="dirt absolute top-8 right-6 w-8 h-8 bg-amber-400 rounded-full border-2 border-amber-600 flex items-center justify-center text-xs font-black text-amber-950">🦠</div>
+        </div>
+      `;
+
+      // Alat Water Spray
+      trayTools.innerHTML = `
+        <div id="tool-spray" class="w-16 h-16 bg-blue-100 border-2 border-blue-400 rounded-2xl flex flex-col items-center justify-center text-3xl shadow-lg cursor-grab active:cursor-grabbing active:scale-110 transition">
+          🚿
+          <span class="text-[9px] font-black text-blue-700">Air</span>
+        </div>
+      `;
+
+      makeDraggable('tool-spray', (x, y) => {
+        snd('spray');
+        spawnWaterDrop(x, y);
+
+        // Periksa jika muncung terkena mana-mana tompok plak
+        ['dirt1', 'dirt2', 'dirt3'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el && isColliding(x, y, el)) {
+            el.style.transform = "scale(0)";
+            el.style.transition = "transform 0.25s ease-out";
+            setTimeout(() => {
+              if (el.parentNode) el.remove();
+              checkLevel1Win();
+            }, 250);
+          }
+        });
+      });
+    }
+
+    function checkLevel1Win() {
+      const remaining = stageArena.querySelectorAll('.dirt');
+      if (remaining.length === 0) {
+        snd('sparkle');
+        setTimeout(() => {
+          currentLevel = 2;
+          loadLevel();
+        }, 500);
+      }
+    }
+
+    /* ========================================================
+       LEVEL 2: CABUT GIGI GOYANG (PULL PHYSICS)
+       ======================================================== */
+    function setupLevel2() {
+      instructionTitle.textContent = "Rawatan 2: Cabut Gigi Rosak 🦷";
+      instructionSub.textContent = "Tarik gigi hitam ke atas laju-laju!";
+
+      stageArena.innerHTML = `
+        <div class="flex flex-col items-center">
+          <div id="pull-tooth" class="w-28 h-32 bg-stone-500 rounded-3xl border-4 border-stone-700 shadow-2xl flex flex-col items-center justify-center cursor-grab active:cursor-grabbing text-white font-black relative">
+            <span class="text-4xl">👾</span>
+            <span class="text-[10px] mt-1 bg-black/40 px-2 py-0.5 rounded-full">Tarik Saya!</span>
+          </div>
+        </div>
+      `;
+
+      trayTools.innerHTML = `
+        <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
+          <span>Gunakan jari anda untuk menarik gigi keluar! 👆</span>
+        </div>
+      `;
+
+      let startY = 0;
+      const tooth = document.getElementById('pull-tooth');
+
+      tooth.addEventListener('pointerdown', (e) => {
+        startY = e.clientY;
+        tooth.setPointerCapture(e.pointerId);
+      });
+
+      tooth.addEventListener('pointermove', (e) => {
+        if (!startY) return;
+        const diffY = e.clientY - startY;
+        
+        // Bila ditarik ke atas (diffY bernilai negatif)
+        if (diffY < 0) {
+          tooth.style.transform = `translateY(${diffY}px) rotate(${diffY * 0.1}deg)`;
+          if (diffY < -90) {
+            // Berjaya cabut!
+            startY = 0;
+            snd('pop');
+            if (navigator.vibrate) navigator.vibrate(100);
+
+            tooth.innerHTML = '<span class="text-5xl">✨</span><span class="text-xs font-black text-emerald-300">Tercabut!</span>';
+            tooth.className = "w-28 h-32 bg-emerald-400 rounded-3xl border-4 border-emerald-600 shadow-2xl flex flex-col items-center justify-center";
+            tooth.style.transform = "translateY(-120px) scale(1.1)";
+            tooth.style.transition = "all 0.4s ease-out";
+
+            setTimeout(() => {
+              currentLevel = 3;
+              loadLevel();
+            }, 600);
+          }
+        }
+      });
+
+      tooth.addEventListener('pointerup', () => {
+        if (startY) {
+          tooth.style.transform = 'translateY(0px)';
+          tooth.style.transition = 'transform 0.2s';
+          startY = 0;
+        }
+      });
+    }
+
+    /* ========================================================
+       LEVEL 3: TAMPAL GIGI (DRILL ➔ FILL ➔ UV LIGHT)
+       ======================================================== */
+    let step3State = 1; // 1: Drill, 2: Simen, 3: Lampu UV
+
+    function setupLevel3() {
+      step3State = 1;
+      instructionTitle.textContent = "Rawatan 3: Tampal Gigi 🔦";
+      instructionSub.textContent = "Seret Mesin Pengorek ⚙️ untuk buang kotoran hitam!";
+
+      stageArena.innerHTML = `
+        <div id="cavity-tooth" class="relative w-32 h-36 bg-white rounded-3xl border-4 border-slate-300 shadow-2xl flex items-center justify-center">
+          <span class="text-4xl opacity-20">🦷</span>
+          <div id="cavity-hole" class="absolute w-14 h-14 bg-stone-900 rounded-full border-2 border-stone-700 flex items-center justify-center transition-all duration-300">
+            <span id="hole-content" class="text-sm">🪱</span>
+          </div>
+        </div>
+      `;
+
+      renderLevel3Tools();
+    }
+
+    function renderLevel3Tools() {
+      trayTools.innerHTML = '';
+
+      if (step3State === 1) {
+        // Alat 1: Drill
+        trayTools.innerHTML = `
+          <div id="tool-drill" class="w-16 h-16 bg-amber-100 border-2 border-amber-400 rounded-2xl flex flex-col items-center justify-center text-3xl shadow-lg cursor-grab active:scale-110">
+            ⚙️
+            <span class="text-[9px] font-black text-amber-800">Korek</span>
+          </div>
+        `;
+        makeDraggable('tool-drill', (x, y) => {
+          snd('drill');
+          const hole = document.getElementById('cavity-hole');
+          if (isColliding(x, y, hole)) {
+            step3State = 2;
+            instructionSub.textContent = "Sekarang picit Simen Warna 🍦 ke dalam lubang!";
+            document.getElementById('hole-content').textContent = '';
+            hole.className = "absolute w-14 h-14 bg-stone-600 rounded-full border-2 border-dashed border-white transition-all";
+            snd('sparkle');
+            renderLevel3Tools();
+          }
+        });
+
+      } else if (step3State === 2) {
+        // Alat 2: Simen
+        trayTools.innerHTML = `
+          <div id="tool-fill" class="w-16 h-16 bg-pink-100 border-2 border-pink-400 rounded-2xl flex flex-col items-center justify-center text-3xl shadow-lg cursor-grab active:scale-110">
+            🍦
+            <span class="text-[9px] font-black text-pink-700">Simen</span>
+          </div>
+        `;
+        makeDraggable('tool-fill', (x, y) => {
+          snd('spray');
+          const hole = document.getElementById('cavity-hole');
+          if (isColliding(x, y, hole)) {
+            step3State = 3;
+            instructionSub.textContent = "Seret Lampu UV 🔦 untuk keraskan simen!";
+            hole.className = "absolute w-14 h-14 bg-sky-300 rounded-full border-2 border-sky-400 flex items-center justify-center shadow-inner transition-all";
+            hole.innerHTML = '💧';
+            snd('sparkle');
+            renderLevel3Tools();
+          }
+        });
+
+      } else if (step3State === 3) {
+        // Alat 3: Lampu UV
+        trayTools.innerHTML = `
+          <div id="tool-light" class="w-16 h-16 bg-indigo-100 border-2 border-indigo-400 rounded-2xl flex flex-col items-center justify-center text-3xl shadow-lg cursor-grab active:scale-110">
+            🔦
+            <span class="text-[9px] font-black text-indigo-700">Lampu UV</span>
+          </div>
+        `;
+        makeDraggable('tool-light', (x, y) => {
+          snd('drill');
+          const hole = document.getElementById('cavity-hole');
+          fxLayer.innerHTML = `<div class="w-full h-full bg-blue-500/20 backdrop-brightness-125 transition"></div>`;
+          
+          if (isColliding(x, y, hole)) {
+            fxLayer.innerHTML = '';
+            hole.className = "absolute w-14 h-14 bg-white rounded-full border-2 border-emerald-400 flex items-center justify-center shadow-sm";
+            hole.innerHTML = '✨';
+            document.getElementById('cavity-tooth').className = "relative w-32 h-36 bg-white rounded-3xl border-4 border-emerald-400 shadow-2xl flex items-center justify-center";
+            snd('sparkle');
+            setTimeout(showWinScreen, 600);
+          }
+        });
+      }
+    }
+
+    /* ========================================================
+       UTILITI GESTUR SENTUHAN (TOUCH & DRAG ENGINE)
+       ======================================================== */
+    function makeDraggable(elemId, onDragCallback) {
+      const elem = document.getElementById(elemId);
+      if (!elem) return;
+
+      let isDragging = false;
+      const initialParent = elem.parentElement;
+
+      elem.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        elem.setPointerCapture(e.pointerId);
+        elem.style.position = 'fixed';
+        elem.style.zIndex = '1000';
+      });
+
+      elem.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        elem.style.left = `${e.clientX - 32}px`;
+        elem.style.top = `${e.clientY - 32}px`;
+
+        if (onDragCallback) {
+          onDragCallback(e.clientX, e.clientY);
+        }
+      });
+
+      const stopDrag = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        elem.style.position = 'relative';
+        elem.style.left = '0px';
+        elem.style.top = '0px';
+        elem.style.zIndex = '10';
+        fxLayer.innerHTML = '';
+      };
+
+      elem.addEventListener('pointerup', stopDrag);
+      elem.addEventListener('pointercancel', stopDrag);
+    }
+
+    function isColliding(x, y, targetElem) {
+      if (!targetElem) return false;
+      const rect = targetElem.getBoundingClientRect();
+      return (
+        x >= rect.left - 20 &&
+        x <= rect.right + 20 &&
+        y >= rect.top - 20 &&
+        y <= rect.bottom + 20
+      );
+    }
+
+    function spawnWaterDrop(x, y) {
+      const drop = document.createElement('div');
+      drop.className = 'absolute w-3 h-3 bg-cyan-300 rounded-full pointer-events-none';
+      drop.style.left = `${x - 10 + (Math.random()*20)}px`;
+      drop.style.top = `${y - 10 + (Math.random()*20)}px`;
+      document.body.appendChild(drop);
+      setTimeout(() => drop.remove(), 150);
+    }
+
+    function showWinScreen() {
+      snd('sparkle');
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      screenGame.classList.add('hidden');
+      screenWin.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
